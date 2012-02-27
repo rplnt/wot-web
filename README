@@ -1,1 +1,3 @@
 Simple web listing of WoT clan members written in python.
+
+dep: bottle, sqlalchemy, bottle-sqlalchemy, requests, beautifulsoup
