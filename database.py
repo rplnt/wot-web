@@ -1,5 +1,8 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Boolean, Date
+from sqlalchemy import Integer, String, DateTime, Boolean, Date, PickleType
+from sqlalchemy import Column, ForeignKey
+from sqlalchemy import create_engine, select
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import column_property
 import datetime
 
 Base = declarative_base()
@@ -13,6 +16,10 @@ class Player(Base):
     region_id = Column(Integer, ForeignKey('regions.id'))
     clan_id = Column(Integer, ForeignKey('clans.id'))
     enrolled = Column(Date)
+    url = column_property(
+        # TODO
+    )
+    
     
     def __init__(self, name, wot_id, region_id, clan_id, enrolled):
         self.name = name
@@ -22,7 +29,7 @@ class Player(Base):
         self.enrolled = datetime.date.today()
 
 
-class Vehicle(Base):
+class VehicleData(Base):
     __tablename__ = 'vehicles'
     id = Column(String, primary_key=True) # from url
     name = Column(String) # printable
@@ -48,6 +55,10 @@ class Updates(Base):
     defeats = Column(Integer)
     kills = Column(Integer)
     
+    #@hybrid_property
+    #def ratio
+    
+    
     def __init__(self, player_id, time, total, wins, defeats, kills):
         self.player_id = player_id
         self.time = time
@@ -65,8 +76,42 @@ class Tank(Base):
     wins = Column(Integer)
     updated = Column(Date) # == last played
     
+    def __init__(self, player_id, tank_id, total, wins):
+        self.player_id = player_id
+        self.tank_id = tank_id
+        self.total = total
+        self.wins = wins
+        self.updated = datetime.date.today()
 
+    
 class Clan(Base):
+    __tablename__ = 'clans'
     id = Column(Integer, primary_key=True)
-    #region = Column(String)
+    region_id = Column(Integer, ForeignKey('regions.id'))
     name = Column(String)
+    url = Column(String)
+    
+    def __init__(self, url):
+        pass # TODO
+        
+
+
+class Region(Base):
+    __tablename__ = 'regions'
+    id = Column(Integer, primary_key=True)
+    shortname = Column(String)
+    base_url = Column(String)
+    
+    
+class News(Base):
+    __tablename__ = 'news'
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime)
+    message_id = Column(Integer, ForeignKey('messages.id'))
+    dictionary = Column(PickleType)
+    
+    
+class Message(Base):
+    __tablename__ = 'messages'
+    id = Column(Integer, primary_key=True)
+    message = Column(String)
