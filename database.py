@@ -2,31 +2,26 @@ from sqlalchemy import Integer, String, DateTime, Boolean, Date, PickleType
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy import create_engine, select
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import column_property
+from sqlalchemy.orm import column_property, relationship, backref
 import datetime
 
+import config
+
 Base = declarative_base()
-engine = create_engine(sqlite_db, echo=True)
+engine = create_engine(config.sqlite_db, echo=True)
 
 class Player(Base):
     __tablename__ = 'players'
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    wot_id = Column(String)
-    region_id = Column(Integer, ForeignKey('regions.id'))
-    clan_id = Column(Integer, ForeignKey('clans.id'))
+    wot_id = Column(Integer, index=True)
+    region = Column(String, index=True)
+    clan_id = Column(Integer, ForeignKey('clans.id'), index=True)
     enrolled = Column(Date)
-    url = column_property(
+    active = Column(Boolean)
+    #url = column_property(
         # TODO
-    )
-    
-    
-    def __init__(self, name, wot_id, region_id, clan_id, enrolled):
-        self.name = name
-        self.wot_id = wot_id
-        self.region_id = region_id
-        self.clan_id = clan_id
-        self.enrolled = datetime.date.today()
+    #)
 
 
 class VehicleData(Base):
@@ -37,19 +32,12 @@ class VehicleData(Base):
     tier = Column(Integer)
     is_top = Column(Boolean)
     
-    def __init__(self, id, name, type_id, tier, is_top):
-        self.id = id
-        self.name = name
-        self.type_id = type_id
-        self.tier = tier
-        self.is_top = is_top
-    
 
 class Updates(Base):
     __tablename__ = 'updates'
     id = Column(Integer, primary_key=True)
-    player_id = Column(Integer, ForeignKey('players.id'))
-    time = Column(DateTime)
+    player_id = Column(Integer, ForeignKey('players.id'), index=True)
+    time = Column(DateTime, index=True)
     total = Column(Integer)
     wins = Column(Integer)
     defeats = Column(Integer)
@@ -58,20 +46,12 @@ class Updates(Base):
     #@hybrid_property
     #def ratio
     
-    
-    def __init__(self, player_id, time, total, wins, defeats, kills):
-        self.player_id = player_id
-        self.time = time
-        self.total = total
-        self.wins = wins
-        self.defeats = defeats
-        self.kills = kills
 
 
 class Tank(Base):
     __tablename__ = 'tanks'
-    player_id = Column(Integer, ForeignKey('vehicles.id'))
-    tank_id = Column(String, ForeignKey('platers.id'))
+    player_id = Column(Integer, ForeignKey('vehicles.id'), index=True, primary_key=True)
+    tank_id = Column(String, ForeignKey('players.id'), primary_key=True)
     total = Column(Integer)
     wins = Column(Integer)
     updated = Column(Date) # == last played
@@ -87,31 +67,30 @@ class Tank(Base):
 class Clan(Base):
     __tablename__ = 'clans'
     id = Column(Integer, primary_key=True)
-    region_id = Column(Integer, ForeignKey('regions.id'))
+    region = Column(String)
     name = Column(String)
-    url = Column(String)
+    full_name = Column(String)
+    description = Column(String)
+    
+    #url = column_property(
+        # TODO
+    #)
     
     def __init__(self, url):
         pass # TODO
         
 
-
-class Region(Base):
-    __tablename__ = 'regions'
-    id = Column(Integer, primary_key=True)
-    shortname = Column(String)
-    base_url = Column(String)
-    
     
 class News(Base):
     __tablename__ = 'news'
     id = Column(Integer, primary_key=True)
-    date = Column(DateTime)
-    message_id = Column(Integer, ForeignKey('messages.id'))
+    date = Column(DateTime, index=True)
+    message_id = Column(Integer, ForeignKey('messages.id'), default=None)
+    clan_id = Column(Integer, ForeignKey('clans.id'), default=None)
     dictionary = Column(PickleType)
     
     
 class Message(Base):
     __tablename__ = 'messages'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     message = Column(String)
