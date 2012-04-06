@@ -1,6 +1,6 @@
 
 # Path to database file
-sqlite_db = r'sqlite:///wot-sql.db'
+sqlite_db = r'sqlite:///wot.sqlite'
 
 # list of urls to clan listing pages
 clans = [
